@@ -5,37 +5,22 @@ import ResultsGallery from './ResultsGallery';
 import SingleImage from './SingleImage';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
-const MobileNet = require('@tensorflow-models/mobilenet');
-
 const MainApp = () => {
     const [results, setResults] = useState([]);
     const [gigaState, setGigaState] = useState(false);
     const fileInputRef = useRef(null);
-    const showWelcomeTitlesFlag = useRef(false);
+    const showSingleImage = useRef(false);
     const isImageBeingProcessed = useRef(false);
-    const [loadMobileNetModel, setMobileNetModel] = useState(null);
     const [image, setImage] = useState({ src: null, title: null, excerpt: null, description: null, confidence: null });
 
-
     useEffect(() => {
-        setMobileNetModel(async () => await MobileNet.load());
-    }, []);
-
-    useEffect(() => {
-
-        if (showWelcomeTitlesFlag.current) {
-            showWelcomeTitlesFlag.current = false;
-            isImageBeingProcessed.current = false;
-
-            setGigaState(true);
-            setResults(results => [...results, image])
-        }
+            if(image.src){
+                setResults(results => [...results, image])
+            }
         return;
     }, [image]);
 
-
-
-    const loadMobilenetImage = (src) => {
+    const loadImage = (src) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.addEventListener('load', () => resolve(img));
@@ -44,38 +29,45 @@ const MainApp = () => {
         })
     }
 
-    //This function could be memoized
-    const capitalizeFirstLetter = (string) => {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-
     const handleImageChange = (e) => {
         isImageBeingProcessed.current = true;
         setGigaState(false);
-        loadMobilenetImage(URL.createObjectURL(e.target.files[0])).then(async img => {
-            const predictions = await (await (loadMobileNetModel)).classify(img);
-            const wikipediaResponse = await fetch("https://en.wikipedia.org/w/rest.php/v1/search/page?" + new URLSearchParams({
-                limit: 1,
-                q: predictions[0].className.split(',')[0],
-            }));
-            const wikipediaData = (await wikipediaResponse.json()).pages[0];
-            if (wikipediaResponse.status === 200) {
-                setImage((image) => {
-                    showWelcomeTitlesFlag.current = true; //useEffect flag of results state, to imitate callback of setImage https://github.com/facebook/react/issues/14174
-                    return {
-                        src: URL.createObjectURL(e.target.files[0]),
-                        title: capitalizeFirstLetter(predictions[0].className.split(',')[0]),
-                        confidence: parseFloat(predictions[0].probability).toFixed(2),
-                        description: wikipediaData.description,
-                        excerpt: wikipediaData.title + " " + (wikipediaData.excerpt.replace(/<\/?[^>]+(>|$)/g, "").split(';')[0])  //trim html tags from response
+
+
+        loadImage(URL.createObjectURL(e.target.files[0])).then(async img => {
+            isImageBeingProcessed.current = true
+
+            const formData = new FormData();
+            formData.append('image', e.target.files[0]);
+
+            try{
+                const response = await fetch('http://127.0.0.1:5000/make_predictions', {
+                    method: 'POST',
+                    body: formData,
+                  });
+
+                const responseData = await response.json();
+                const imageUrl = responseData.predicted_image;
+                const title = responseData.textData;
+
+                showSingleImage.current = true;
+
+                setImage((image) => {return {
+                    src: imageUrl,
+                    title: title,
+                    confidence: "weed",
+                    description: "weed",
+                    excerpt: "weed"
                     }
                 });
+
+            } catch (error) {
+                console.error('Error uploading image:', error);
             }
+
+            isImageBeingProcessed.current = false;
         }).catch(err => console.error(err));
-
     }
-
-
 
     return (
         <Container disableGutters  >
@@ -93,16 +85,14 @@ const MainApp = () => {
                             appear: 1000,
                             enter: 1000,
                             exit: 1000,
-                        }}
-                    >
-                        {gigaState ? <SingleImage image={image} /> : <React.Fragment /> //TODO (convert if to state)
-                        }
+                        }}>
+
+                    {showSingleImage.current ? <SingleImage image={image} />: <></> }
 
                     </CSSTransition>
 
-                    {!(gigaState || !!results.length) &&
-                        <AppTitles />
-                    }
+                    { showSingleImage.current ? <></> : AppTitles() }
+
                 </Box>
                 <Stack
                     sx={{ pt: 4 }}
@@ -112,13 +102,13 @@ const MainApp = () => {
                 >
                     <Button variant="contained" onClick={() => { fileInputRef.current.click(); }}>
                         <input ref={fileInputRef} type="file" id="image-upload" style={{ display: 'none' }} onChange={handleImageChange} />
-                        {!!results.length ? 'Upload next image' : 'Upload image'}
+                        {showSingleImage.current ? 'Upload next image' : 'Upload image'}
                     </Button>
                 </Stack>
 
             </Container >
             {
-                !!results.length &&
+                showSingleImage.current ?
 
                 <Container sx={{ py: 8 }} >
 
@@ -126,7 +116,7 @@ const MainApp = () => {
                     <Paper elevation={3} sx={{ p: 4, bgcolor: "primary.main" }}>
                         <ResultsGallery results={results} />
                     </Paper>
-                </Container>
+                </Container> : <></>
             }
         </Container >
     );

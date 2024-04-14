@@ -7,6 +7,7 @@ const SingleImage = ({ image }) => {
     useEffect(() => {
         console.log(image);
     }, []);
+
     return (
         <Card
             sx={{ height: '100%', display: 'flex', flexDirection: 'column', transition: "opacity 500ms ease-in-out" }}

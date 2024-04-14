@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-
+import WeedLogo from "../weed.avif";
 import MainApp from './MainApp';
 
 
@@ -23,8 +23,8 @@ function Copyright() {
     return (
         <Typography variant="body2" color="text.secondary" align="center">
             {'Copyright © '}
-            <Link color="inherit" href="https://github.com/GigaNByte">
-                {'GigaNByte'}
+            <Link color="inherit" href="https://github.com/anshulagrawal2902/WeedDetection">
+                {'Anshul Agrawal and Sahil Kamdar'}
             </Link>{' '}
             {new Date().getFullYear()}
             {'.'}
@@ -32,7 +32,38 @@ function Copyright() {
     );
 }
 
-const theme = createTheme();
+const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#4CAF50', // Green color for nature
+      },
+      secondary: {
+        main: '#2196F3', // Blue color for technology/science
+      },
+      background: {
+        default: '#F5F5F5', // Light gray background
+      },
+      text: {
+        primary: '#333333', // Dark text color
+        secondary: '#666666', // Lighter secondary text color
+      },
+    },
+    typography: {
+      fontFamily: 'Roboto, sans-serif',
+      h1: {
+        fontSize: '1.5rem',
+        fontWeight: 600,
+        marginBottom: '1rem',
+        color: '#333333',
+      },
+      body1: {
+        fontSize: '1rem',
+        lineHeight: 1.6,
+        color: '#333333',
+      },
+    },
+  });
+
 
 export default function Layout() {
     return (
@@ -41,9 +72,10 @@ export default function Layout() {
             <Box sx={{ minHeight: "100vh", flexDirection: "column", display: "flex" }}>
                 <AppBar position="relative" component="header">
                     <Toolbar>
-                        <CameraIcon sx={{ mr: 2 }} />
+                        {/* <CameraIcon sx={{ mr: 2 }} /> */}
+                        <img src={WeedLogo} alt="Custom Icon" style={{ width: '60px', height: '60px', marginRight: '10px' }} />
                         <Typography component="h1" variant="h6" color="inherit" noWrap>
-                            Image Classification Demo
+                            Weed Detector Demo
                         </Typography>
                     </Toolbar>
                 </AppBar>
@@ -52,15 +84,13 @@ export default function Layout() {
                 </Box>
                 <Box sx={{ p: 6 }} component="footer">
                     <Typography variant="h6" align="center" gutterBottom>
-                        Image Classification Demo
+                        Weed Detector Demo
                     </Typography>
                     <Typography
                         variant="subtitle1"
                         align="center"
                         color="text.secondary"
-                        component="p"
-                    >
-                        This Tensorflow.js demo App uses <a href="https://github.com/tensorflow/tfjs-models/tree/master/mobilenet">MobileNet</a> provided by <a href="https://www.tensorflow.org/" >Tensorflow</a>
+                        component="p">
                     </Typography>
                     <Copyright />
                 </Box>
